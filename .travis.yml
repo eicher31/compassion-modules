@@ -11,9 +11,17 @@ addons:
   apt:
     packages:
       - expect-dev  # provides unbuffer utility
-      - libcups2-dev  # otherwise travis fails to install pycups
-      - postgis postgresql-9.6-postgis-2.3 # travis doesn't know which one to install
-      - postgresql-9.6-postgis-2.3-scripts # pre-installed on travis but required for runbot
+      - python-lxml  # because pip installation is slow
+      - python-simplejson
+      - python-serial
+      - python-yaml
+      - python-cups
+      - python-pdfminer  # pip does install a bad version not working with python 2
+      - wkhtmltopdf
+      # OpenCV requirements packages
+      - zbar-tools
+      - libzbar0
+
 env:
   global:
   - VERSION="11.0" TESTS="0" LINT_CHECK="0" TRANSIFEX="0"
