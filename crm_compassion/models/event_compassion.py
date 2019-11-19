@@ -27,13 +27,13 @@ class EventCompassion(models.Model):
     name = fields.Char(size=128, required=True, track_visibility='onchange')
     full_name = fields.Char(compute='_compute_full_name')
     type = fields.Selection([
-        ('stand', _("Stand")),
-        ('concert', _("Concert")),
-        ('presentation', _("Presentation")),
-        ('meeting', _("Meeting")),
-        ('sport', _("Sport event")),
-        ('tour', _("Sponsor tour")),
-    ], required=True, track_visibility='onchange')
+            ('stand', _("Stand")),
+            ('concert', _("Concert")),
+            ('presentation', _("Presentation")),
+            ('meeting', _("Meeting")),
+            ('sport', _("Sport event")),
+            ('tour', _("Sponsor tour")),
+        ], required=True, track_visibility='onchange')
     start_date = fields.Datetime(required=True)
     year = fields.Char(compute='_compute_year', store=True)
     end_date = fields.Datetime(required=True)
@@ -578,7 +578,7 @@ class EventCompassion(models.Model):
                     user_id = ambassador.id
                 self.env.cr.execute(
                     "UPDATE crm_event_compassion "
-                    f"SET user_id = {user_id} WHERE id = {event.id}"
+                    f"SET user_id = {ambassador.id or None} WHERE id = {event.id}"
                 )
         return True
 
