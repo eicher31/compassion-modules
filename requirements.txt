@@ -12,9 +12,5 @@ sphinx
 sphinx_bootstrap_theme
 sphinx-intl
 odoo-sphinx-autodoc
-firebase_admin
-detectlanguage
-timezonefinder==3.4.2
-firebase-admin
-pytz
-pyzbar
+regex
+bs4
