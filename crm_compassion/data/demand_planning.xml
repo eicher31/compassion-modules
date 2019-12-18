@@ -1,4 +1,12 @@
 <odoo>
+    <record id="correct_event_resupply_action" model="ir.actions.server">
+        <field name="name">Demand planning: correct negative resupply</field>
+        <field name="model_id" ref="model_demand_weekly_demand"/>
+        <field name="state">code</field>
+        <field name="sequence">10</field>
+        <field name="code">records.correct_event_resupply()</field>
+    </record>
+
     <data noupdate="1">
         <!-- Rule for correcting negative resupply of events -->
         <record id="correct_resupply_event_rule" model="base.automation">
@@ -6,7 +14,7 @@
             <field name="model_id" ref="model_demand_weekly_demand"/>
             <field name="trigger">on_time</field>
             <field name="filter_domain">[('resupply_events', '&lt;', 0)]</field>
-            <field name="server_action_ids" eval="[(6, 0, [ref('correct_event_resupply_action')])]"/>
+            <field name="action_server_id" eval="[(6, 0, [ref('correct_event_resupply_action')])]"/>
         </record>
     </data>
 </odoo>

@@ -12,7 +12,6 @@ from . import event_compassion
 from . import contract_origin
 from . import contract
 from . import crm_lead
-from . import project_project
 from . import account_analytic_line
 from . import account_invoice_line
 from . import res_partner

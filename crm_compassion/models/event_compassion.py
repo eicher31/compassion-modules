@@ -99,14 +99,12 @@ class EventCompassion(models.Model):
         related='origin_id.won_sponsorships', store=True)
     conversion_rate = fields.Float(
         related='origin_id.conversion_rate', store=True)
-    project_id = fields.Many2one('project.project', 'Project')
-    use_tasks = fields.Boolean()
     calendar_event_id = fields.Many2one('calendar.event')
     hold_start_date = fields.Date(required=True)
     hold_end_date = fields.Date()
     campaign_id = fields.Many2one('utm.campaign', 'Campaign')
 
-    # Multicompany
+    # Multi-company
     company_id = fields.Many2one(
         'res.company',
         'Company',
@@ -216,12 +214,6 @@ class EventCompassion(models.Model):
 
         event = super().create(vals)
 
-        # Create project for the tasks
-        project_id = False
-        if event.use_tasks:
-            project_id = self.env['project.project'].with_context(
-                from_event=True).create(event._get_project_vals()).id
-
         # Analytic account and Origin linked to this event
         analytic_id = self.env['account.analytic.account'].create(
             event._get_analytic_vals()).id
@@ -230,7 +222,6 @@ class EventCompassion(models.Model):
         event.with_context(no_sync=True).write({
             'origin_id': origin_id,
             'analytic_id': analytic_id,
-            'project_id': project_id,
         })
 
         # Add calendar event
@@ -246,15 +237,6 @@ class EventCompassion(models.Model):
         super().write(vals)
         if not self.env.context.get('no_sync'):
             for event in self:
-                if 'use_tasks' in vals and event.use_tasks:
-                    # Link event to a Project
-                    project_id = self.env['project.project'].with_context(
-                        from_event=True).create(event._get_project_vals()).id
-                    event.write({'project_id': project_id})
-                elif event.project_id:
-                    # Update event
-                    event.project_id.with_context(from_event=True).write(
-                        event._get_project_vals())
 
                 # Update Analytic Account and Origin
                 event.analytic_id.write(event._get_analytic_vals())
@@ -289,8 +271,6 @@ class EventCompassion(models.Model):
                     _('The event is linked to expenses or sponsorships. '
                       'You cannot delete it.'))
             else:
-                if event.project_id:
-                    event.project_id.unlink()
                 if event.analytic_id:
                     event.analytic_id.unlink()
                 event.origin_id.unlink()
@@ -317,25 +297,6 @@ class EventCompassion(models.Model):
     ##########################################################################
     #                             VIEW CALLBACKS                             #
     ##########################################################################
-    @api.multi
-    def show_tasks(self):
-        self.ensure_one()
-        project_id = self.project_id.id
-        return {
-            'name': _('Project Tasks'),
-            'type': 'ir.actions.act_window',
-            'view_mode': 'kanban,tree,form,calendar,gantt,graph',
-            'view_type': 'form',
-            'res_model': 'project.task',
-            'src_model': 'crm.event.compassion',
-            'context': {
-                'search_default_project_id': [project_id],
-                'default_project_id': project_id,
-                'active_test': False},
-            'search_view_id': self.env['ir.model.data'].get_object_reference(
-                'project', 'view_task_search_form')[1]
-        }
-
     @api.multi
     def show_sponsorships(self):
         self.ensure_one()
@@ -432,34 +393,6 @@ class EventCompassion(models.Model):
     ##########################################################################
     #                             PRIVATE METHODS                            #
     ##########################################################################
-    def _get_project_vals(self):
-        """ Creates a new project based on the event.
-        """
-        vals = {
-            'name': self.full_name,
-            'use_tasks': True,
-            'analytic_account_id': self.analytic_id.id,
-            'project_type': self.type,
-            'user_id': self.user_id.id,
-            'partner_id': self.partner_id.id,
-            'date_start': self.start_date,
-            'date': self.end_date,
-            'state': 'open',
-            'privacy_visibility': 'employees',
-        }
-        followers = list()
-        existing = self.project_id.message_follower_ids.mapped(
-            'partner_id').ids
-        for staff in self.staff_ids:
-            if staff.id not in existing:
-                followers.append((0, 0, {
-                    'partner_id': staff.id,
-                    'res_model': 'project.project'
-                }))
-        if followers:
-            vals['message_follower_ids'] = followers
-        return vals
-
     def _get_analytic_vals(self):
         name = self.name
         tag_ids = self.env['account.analytic.tag'].search([
